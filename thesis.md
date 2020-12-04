@@ -1,6 +1,6 @@
 # Introduction
 
-Today, as cloud computing is becoming more and more ubiquitus, there is an increasing demand for finer control of resources in our data centers.
+Today, as cloud computing is becoming more and more ubiquitous, there is an increasing demand for finer control of resources in our data centers.
 Network bandwidth is a valuable resource, TODO
 The primare goal of this thesis is to provide an easy-to-use solution for limiting the bandwidth in our Kubernetes cluster on a per-pod basis.
 
@@ -63,8 +63,6 @@ In the second version, the program had to be integrated into the context of a Ku
 The first task was to get a working Kubernetes cluster going.
 My first idea was to use Minikube, which pre-configured Kubernetes cluster pre-packaged as a container or a VM.
 Unfortunately this proved to be incompatible with my solution, so I had to install and configure the cluster on my machine.
-
-
 
 - cgroups
 - kubernetes
@@ -153,14 +151,16 @@ Without it, the `bpf()` system call would have to be called manually.
 
 After cgroup v2 is mounted, the Docker daemon will most likely fail to start.
 This is due to the fact that most container runtimes, including docker, still don't support the new cgroup hierarchy.[^fn4]
-Fortunately, the developer 
-
-- bpftool
-- docker-dev
-- cgroup v2
-- kernel
+Fortunately, the project's master branch[^fn5] already contains the necessary changes for cgroup v2 support.
+Compiling it and using the resulting `dockerd-dev` binary solves the problem.
 
 ## Usage
+
+To use the program, a Kubernetes cluster has to be running already.
+The `ratelimit_master.py` file contains the script that should be started on the master node, while `ratelimit_slave.py` contains the code that runs on the worker nodes.
+While the `ratelimit_master.py` script can be executed by any user that's able to communicate with the Kubernetes API, `ratelimit_slave.py` can only be executed by root, because attaching BPF programs requires higher privileges.
+
+The program requires no further actions from the user, the program will do the attaching and detaching of the BPF programs automatically when it detects the starting and stopping of pods in the cluster.
 
 # Developer Documentation
 
@@ -170,8 +170,10 @@ Fortunately, the developer
 
 # Further Plans
 
+TODO BCC, XDP
 TODO native python, not bpftool
 TODO test for multiple nodes
+TODO Store state
 
 # Summary
 
@@ -179,3 +181,4 @@ TODO test for multiple nodes
 [^fn2]:https://kernelnewbies.org/Linux_3.16#Unified_Control_Group_hierarchy
 [^fn3]:https://wiki.archlinux.org/index.php/Kernel_parameters
 [^fn4]:https://medium.com/nttlabs/cgroup-v2-596d035be4d7
+[^fn5]:https://github.com/moby/moby
