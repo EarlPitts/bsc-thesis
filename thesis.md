@@ -19,7 +19,7 @@ The thesis consists of multiple chapters, each TODO
 ## Qemu
 
 When I started the project, I used Qemu for testing newer kernel functions.
-As most of the features that the project requires are still not widely adopted or even in development status, I had to compile 
+As most of the features that the project requires are still not widely adopted, I had to compile the kernel with the required features explicitly turned on.
 Qemu made it convinient to test kernel features without affecting my own host operating system.
 TODO ubuntu cloud image?
 
@@ -59,6 +59,7 @@ While this initial version was not the direction the project went towards later 
 
 The daemon runs on the VM, waiting for messages from the client.
 Based on the message it receives from the client, it attaches or detaches the BPF program, then sends a response to the client.
+Compared to the client, the daemon remained mostly intact in the final version.
 
 ## Second Version
 
