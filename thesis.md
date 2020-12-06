@@ -1,19 +1,18 @@
 # Introduction
 
 Today, as cloud computing is becoming more and more ubiquitous, there is an increasing demand for finer control of resources in our data centers.
-Network bandwidth is a valuable resource, TODO
-The primare goal of this thesis is to provide an easy-to-use solution for limiting the bandwidth in our Kubernetes cluster on a per-pod basis.
+One of these resources if network bandwidth, TODO
 
 ## Motivation
 
-Provides a solution to limit the incoming bandwidth on a per-pod basis.
+The primare goal of this thesis is to provide an easy-to-use solution for limiting the bandwidth in our Kubernetes cluster on a per-pod basis.
 To achieve this, it uses a technology called BPF (Berkeley Packet Filter), or as nowadays called, eBPF.
 eBPF gives you the ability to run mini programs on a wide variety of kernal and application events. 
 It makes the kernel programmable for people without background in kernel development.
 
 ## Thesis Structure
 
-The thesis consists of multiple chapters, each 
+The thesis consists of multiple chapters, each TODO
 
 # Development Environment
 
@@ -26,13 +25,13 @@ TODO ubuntu cloud image?
 
 ## Vagrant
 
-At a later phase, when the project's direction was TODO eleg clear, I switched to Vagrant.
+At a later phase, when the project's direction was sufficiently clear, I switched to Vagrant.
 Vagrant automates most of the steps required to bring up a suitable environment (like automatically syncing the project's directory to the VM).
 
 ## Docker
 
 I chose Docker as the container runtime, mainly because its wide adoptation in the industry, and the number of available resources for it.
-As of November 2020, the TODO official docker daemon still not supports the second version of *cgroups*, which my solution relies on, so I had to use the development version.
+As of November 2020, the official release of the docker daemon still not supports the second version of *cgroups*, which my solution relies on, so I had to use the development version.
 
 ## Kubernetes
 
@@ -51,6 +50,10 @@ In this initial Proof of Concept, the project consisted of two separate programs
 ### Client
 
 The client was a command line tool, with the main purpose of attaching and detaching a BPF program to the VM.
+In the early stages, the BPF program it sent to the daemon was only marking the individual packets.
+That was later replaced with the *shaper* used in the current version.
+With the tool, the user could *attach* and *detach* a BPF program and *get the status* of the VM (does it have a program attached).
+While this initial version was not the direction the project went towards later (the command-line tool was replaced with a background process that requries no user interaction), it still helped in clarifying the user requirements and providing a backbone that the next version could be built upon.
 
 ### Daemon
 
@@ -70,6 +73,9 @@ Unfortunately this proved to be incompatible with my solution, so I had to insta
 # User Documentation
 
 ## Dependencies
+
+- python kubernetes library TODO add requirements
+- clangd
 
 ### Kernel
 
@@ -154,6 +160,11 @@ This is due to the fact that most container runtimes, including docker, still do
 Fortunately, the project's master branch[^fn5] already contains the necessary changes for cgroup v2 support.
 Compiling it and using the resulting `dockerd-dev` binary solves the problem.
 
+### LLVM, Clang
+
+For compiling the the BPF program, my solution uses the *LLVM*[^fn7] compiler collection, although GCC should have BPF support too[^fn6].
+For a frontend to LLVM, it uses *clang*.
+
 ## Usage
 
 To use the program, a Kubernetes cluster has to be running already.
@@ -163,6 +174,33 @@ While the `ratelimit_master.py` script can be executed by any user that's able t
 The program requires no further actions from the user, the program will do the attaching and detaching of the BPF programs automatically when it detects the starting and stopping of pods in the cluster.
 
 # Developer Documentation
+
+The projects contains the following modules and files:
+
+## `ratelimit_master.py`
+
+This module contains the logic that runs on the cluster's master node.
+When its started, it first loads the cluster's configuration, then it begins watching for events in the cluster.
+If it detects the starting or stopping of a pod, the corresponding function is triggered.
+If the event it detected was the deletion of pod, it sends a message to the right node, that the pinned BPF program should be removed.
+In the case of a pod creation event, first the BPF program with the value for rate limiting, which is given in the pod's configuration file is created, then it's sent to the node, where the pod was created, together with information that tells the node how to attach the program.
+
+## `ratelimit_slave.py`
+
+The `ratelimit_slave.py` module runs on each worker node.
+When it's started, it creates a server socket, then blocks, waiting for incoming connections.
+Based on the message it gets from the establised connection with the master node, either the `__attach()` or `__detach()` function is executed.
+When the master node want's to attach a new BPF program, the TODO
+
+## `bpf_generator.py`
+
+This module is responsible for generating the BPF program that will be attached to the pod's cgroup.
+It contains a template TODO
+
+## `bpf_helpers.h`
+
+The `bpf_helpers.h` header file contains some helper functions that are needed for compiling the BPF program.
+The `bpf_generator.py` module links to it while generating the program.
 
 ## Architectural Overview
 
@@ -182,3 +220,5 @@ TODO Store state
 [^fn3]:https://wiki.archlinux.org/index.php/Kernel_parameters
 [^fn4]:https://medium.com/nttlabs/cgroup-v2-596d035be4d7
 [^fn5]:https://github.com/moby/moby
+[^fn6]:https://llvm.org/
+[^fn7]:https://lwn.net/Articles/800606/
