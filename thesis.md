@@ -39,7 +39,8 @@ As of November 2020, the official release of the docker daemon still not support
 
 # Implementation
 
-TODO bpf attached to cgroup
+The main idea that served as the primary goal for the projects was the attachment of the BPF program to a cgroup.
+TODO
 
 ## First Version
 
@@ -75,8 +76,9 @@ Unfortunately this proved to be incompatible with my solution, so I had to insta
 
 ## Dependencies
 
+In this section, I go through the dependencies that are required by the project.
+
 - python kubernetes library TODO add requirements
-- clangd
 
 ### Kernel
 
@@ -153,6 +155,8 @@ The same `linux` line has to be placed inside the `/etc/default/grub` file that 
 
 My current solution relies on `bpftool`, which is a tool used for managing BPF programs.
 Without it, the `bpf()` system call would have to be called manually.
+The sources of bpftool can be found in the kernel repository.[^fn8]
+It can be installed with `make install`.
 
 ### Docker
 
@@ -161,10 +165,25 @@ This is due to the fact that most container runtimes, including docker, still do
 Fortunately, the project's master branch[^fn5] already contains the necessary changes for cgroup v2 support.
 Compiling it and using the resulting `dockerd-dev` binary solves the problem.
 
+To compile the newest version, clone the respository at https://github.com/moby/moby, then use the Makefile that came with it to compile and install it.
+
+`# make binary`
+
 ### LLVM, Clang
 
 For compiling the the BPF program, my solution uses the *LLVM*[^fn7] compiler collection, although GCC should have BPF support too[^fn6].
 For a frontend to LLVM, it uses *clang*.
+
+### Kubernetes Python Client
+
+The Kubernetes Python Client[^fn9] is the official client library for Kubernetes.
+The `requirements.txt` file inside the project's folder contains the exact version I used, so it can be installed with:
+
+`$ pip install -r requirements.txt`
+
+Alternatively, the newest version can be installed with:
+
+`$ pip install kubernetes`
 
 ## Usage
 
@@ -176,6 +195,7 @@ The program requires no further actions from the user, the program will do the a
 
 # Developer Documentation
 
+The newest version can be found at https://github.com/EarlPitts/bpf-ratelimit.
 The projects contains the following modules and files:
 
 ## `ratelimit_master.py`
@@ -196,7 +216,7 @@ When the master node want's to attach a new BPF program, the TODO
 ## `bpf_generator.py`
 
 This module is responsible for generating the BPF program that will be attached to the pod's cgroup.
-It contains a template TODO
+It contains the source code of the BPF program that will be generated, with the network rate part left out, so it can be dynamically filled in by the script.
 
 ## `bpf_helpers.h`
 
@@ -207,6 +227,14 @@ The `bpf_generator.py` module links to it while generating the program.
 
 # Testing
 
+# Summary
+
+# Results
+
+Cilium, a company providing eBPF based solutions for networking, announced its newest release, which introduced a new feature that does almost exactly the same thing as my project.[^fn10]
+
+The project was a great opportunity to learn about networking concepts more in-depth. TODO
+
 # Further Plans
 
 TODO BCC, XDP
@@ -214,7 +242,7 @@ TODO native python, not bpftool
 TODO test for multiple nodes
 TODO Store state
 
-# Summary
+# Sources
 
 [^fn1]:https://kernelnewbies.org/Linux_3.16#Unified_Control_Group_hierarchy
 [^fn2]:https://kernelnewbies.org/Linux_3.16#Unified_Control_Group_hierarchy
@@ -223,3 +251,6 @@ TODO Store state
 [^fn5]:https://github.com/moby/moby
 [^fn6]:https://llvm.org/
 [^fn7]:https://lwn.net/Articles/800606/
+[^fn8]:https://twitter.com/qeole/status/1113121896617447424
+[^fn9]:https://github.com/kubernetes-client/python
+[^fn10]:https://cilium.io/blog/2020/11/10/cilium-19#bwmanager
