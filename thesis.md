@@ -43,7 +43,7 @@ Due to the nature of my project, I couldn't use these off-the-shelf solutions, s
 To create the cluster, first the required binaries have to be installed.
 There are two ways to create a cluster: you can do it manually, or you can use `kubeadm`.
 Because time was pressing, and because I wouldn't have gained any additional benefits from creating the cluster by hand, I chose the second option.
-On Arch linux, the following packages had to be installed:
+On Arch linux[^fn13], the following packages had to be installed:
 
 - `kubectl-bin`
 - `kubelet-bin`
@@ -99,14 +99,17 @@ The plugin I chose was Weave Net, which can be installed after kubectl has been 
 
 `$ kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"`
 
+If everything went according to the plan, the cluster is running and fully functional now.
+
 # Implementation
 
 The main idea that served as the primary goal for the projects was the attachment of the BPF program to a cgroup.
-TODO
+In the final version, this is the pod's cgroup that want to impose the bandwidth limit on.
+However, in earlier versions I simply attached the BPF program to the root cgroup, so I could easily test and see the effect without the need to figure out the exact cgroup to use and measure the bandwidth from the cgroup's context.
 
 ## First Version
 
-In the first version of the projects, I deliberately left out all the Kubernetes related TODO stuff, and only concentrated on sending and attaching a BPF program to the VM.
+In the first version of the project, I deliberately left out all the Kubernetes related TODO stuff, and only concentrated on sending and attaching a BPF program to the VM.
 This meant that I was able to test and provide a proof that the concept was indeed TODO working, without dealing with all the complexities of a Kubernetes cluster.
 In this initial Proof of Concept, the project consisted of two separate programs, that will be described in detail below.
 
@@ -129,16 +132,17 @@ Compared to the client, the daemon remained mostly intact in the final version.
 In the second version, the program had to be integrated into the context of a Kubernetes cluster.
 The first task was to get a working Kubernetes cluster going.
 My first idea was to use Minikube, which pre-configured Kubernetes cluster pre-packaged as a container or a VM.
-Unfortunately this proved to be incompatible with my solution, so I had to install and configure the cluster on my machine.
-
-- cgroups
-- kubernetes
+Unfortunately this proved to be incompatible with my solution, so I had to install and configure the cluster on my machine as described above.
+After the cluster was set up and running, the previous solution could be repurposed to work with Kubernetes.
+Mostly the client was affected, as it now was communicating with the Kubernetes API, and not with the user.
+This required it to continually run in the background, waiting for events coming from the cluster.
 
 # User Documentation
 
 ## Dependencies
 
 In this section, I go through the dependencies that are required by the project.
+I'm assuming that a Kubernetes cluster is already set up, so I only describe the changes necessary for my project to work, although the Kubernetes section inside the development environment chapter describes how to install and configure a Kubernetes cluster if needed.
 
 - python kubernetes library TODO add requirements
 
@@ -227,7 +231,7 @@ This is due to the fact that most container runtimes, including docker, still do
 Fortunately, the project's master branch[^fn5] already contains the necessary changes for cgroup v2 support.
 Compiling it and using the resulting `dockerd-dev` binary solves the problem.
 
-To compile the newest version, clone the respository at https://github.com/moby/moby, then use the Makefile that came with it to compile and install it.
+To compile the newest version, clone the respository at https://github.com/moby/moby, then use the Makefile that came with it to compile and install it:
 
 `# make binary`
 
@@ -254,6 +258,28 @@ The `ratelimit_master.py` file contains the script that should be started on the
 While the `ratelimit_master.py` script can be executed by any user that's able to communicate with the Kubernetes API, `ratelimit_slave.py` can only be executed by root, because attaching BPF programs requires higher privileges.
 
 The program requires no further actions from the user, the program will do the attaching and detaching of the BPF programs automatically when it detects the starting and stopping of pods in the cluster.
+
+The rate limit that the program will assign to the pod, can be specified with a **label** in the pod's YAML file.
+The label that the program will be looking for is `rate`, and it's value must contain the desired bandwidth in the following format: `"<limit in Megabytes>M"`.
+For reference, here is an example YAML file, that describes a pod named *test*, with the bandwidth limit of 1 MB/s:
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test
+  labels: 
+    component: web
+    rate: "1M"
+spec:
+  containers:
+    - name: test
+      image: dashsaurabh/progressive-coder
+      image: quay.io/openshiftlabs/simpleservice:0.5.0
+      ports: 
+      - containerPort: 9875
+```
+
 
 # Developer Documentation
 
@@ -318,3 +344,4 @@ TODO Store state
 [^fn10]:https://cilium.io/blog/2020/11/10/cilium-19#bwmanager
 [^fn11]:https://medium.com/tailwinds-navigator/kubernetes-tip-why-disable-swap-on-linux-3505f0250263
 [^fn12]:https://medium.com/@ahmetensar/kubernetes-network-plugins-abfd7a1d7cac
+[^fn13]:https://wiki.archlinux.org/index.php/Kubernetes
