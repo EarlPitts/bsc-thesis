@@ -1,22 +1,6 @@
 # Introduction
 
-1. Cloud Computing:
-    2. Mainframes
-    3. Bare Metal
-    4. VMs
-    5. Containers
-6. Container advantages
-7. Kubernetes
-8. Kubernetes main capabilities
-
-Resources:
-
-- Processing Power (CPU) (nowadays GPU)
-- Memory
-- Disk Space
-- Network
-
-For cloud computing to become how we know it today, it had to go through a series of steps, with each 
+For cloud computing to become how we know it today, it had to go through a series of steps, with each TODO
 When mainframes first started to appear, their astronomical price made it practically impossible for companies to give each of their employees a device of their own.
 However, having only a single person operate the mainfram would lose precious compute time.
 To solve the problem of allocating the mainframe's resources more efficiently, time-sharing was invented.
@@ -28,28 +12,37 @@ Virtualisation works by simulating virtual hardware, called a *Virtual Machine* 
 The parameters of this virtual machine, like CPU, memory, disk space, can be freely configured (limited only by the resources available to the host), and even the network interface controller (NIC) or various networking devices can be simulated or shared with the VM.
 The problem with virtualization is the need to simulate the whole operating system in each virtual machine.
 
-This idea was taken further with the introduction of operating-system level virtualization.
+The idea of the VM was taken further with the introduction of operating-system level virtualization.
 This approach provided a solution for the problem of needing to unnecessarily simulate the whole operating system.
 In this model, there are multiple user-space "instances", isolated from eachother, sharing the same kernel.
 These instances are what we call containers.
 On Unix-like systems, this abstraction of the filesystem and the resources is done by a more advanced implementation of the *chroot* mechanism, called *namespaces* and a resource-management function, provided by the kernel, called *cgroups*.
 
-TODO: Microservice approach
+The advent of containers have paved the way for the *microservice* model.
+In this model, each part of the software acts as a self-contained service, that can be easily swapped with another one if needed.
+The benefits of this approach are numerous, including robustness (if a container malfunctions for some reason, an other can be placed in its place), scalability (more copies of the service can be started or exisiting copies destroyed easily at will), modularity (these services are losely coupled, they can be easily replaced with newer version of the same service, or even a completely different service), etc...
 
-Today, as cloud computing is becoming more and more ubiquitous, there is an increasing demand for finer control of resources in our data centers.
-These resources include 
+Managing these containers is tiresome, and quickly becomes an almost impossible task as the application grows and becames more complex.
+A solution was needed that would automize the management of these services, making it easier for developers to concentrate on the application itself.
+The solution came in the form of the *container orchestration* tools.
 
-One of these resources if network bandwidth, TODO
-Whith the shift from yesterday's monoliths to the microservices framework
-Microservices
-Kubernetes
+The most widely used container orchestration tool is arguably Kubernetes, which was origianlly designed by Google.
+Kubernetes has the ability to automate most tasks related to the management of containers, like creating and destorying containers based on need.
+
+For these containers to be able to communicate with eachother inside the cluster, a complete virtual network has to be created.
+This virtual network will be the main focus of this thesis.
 
 ## Motivation
 
-The primary goal of this thesis is to provide an easy-to-use solution for limiting the bandwidth in our Kubernetes cluster on a per-pod basis.
+The primary goal of this thesis is to provide an easy-to-use solution for limiting the bandwidth between pods in our Kubernetes cluster in a controlled way.
 To achieve this, it uses a technology called BPF (Berkeley Packet Filter), or as nowadays called, eBPF.
 eBPF gives you the ability to run mini programs on a wide variety of kernal and application events. 
 It makes the kernel programmable for people without background in kernel development.
+
+For networking capabilities, Kubernetes relies on third-party plugins called CNI (Container Network Interface).
+These plugins make it possible for containers to connect to other containers, the host or outside the network.
+
+Cilium, flannel, weave
 
 ## Thesis Structure
 
