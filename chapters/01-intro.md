@@ -40,7 +40,8 @@ eBPF gives you the ability to run mini programs on a wide variety of kernal and 
 It makes the kernel programmable for people without background in kernel development.
 
 For networking capabilities, Kubernetes relies on third-party plugins called CNI (Container Network Interface).
-These plugins make it possible for containers to connect to other containers, the host or outside the network.
+These plugins make it possible for containers to connect to other containers, the host or outside the network by automatically configuring the network when containers are created or destroyed.
+In addition, most of them provide various other functionalities like added security measures
 They do this by creating an *overlay network* on top of the alrady existing one.
 An overlay network is just a virtual network, providing the same functionalities as a phisycal network.
 It functions by encapsulating the network packets in an additional layer.
