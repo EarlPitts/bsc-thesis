@@ -1,6 +1,6 @@
 # Introduction
 
-For cloud computing to become how we know it today, it had to go through a series of steps, with each TODO
+For cloud computing to become how we know it today, it had to go through a series of steps, each improving upon the previous solution.
 When mainframes first started to appear, their astronomical price made it practically impossible for companies to give each of their employees a device of their own.
 However, having only a single person operate the mainfram would lose precious compute time.
 To solve the problem of allocating the mainframe's resources more efficiently, time-sharing was invented.
@@ -41,18 +41,36 @@ It makes the kernel programmable for people without background in kernel develop
 
 For networking capabilities, Kubernetes relies on third-party plugins called CNI (Container Network Interface).
 These plugins make it possible for containers to connect to other containers, the host or outside the network.
+They do this by creating an *overlay network* on top of the alrady existing one.
+An overlay network is just a virtual network, providing the same functionalities as a phisycal network.
+It functions by encapsulating the network packets in an additional layer.
 
-Cilium, flannel, weave
+In the case of smaller clusters, pretty much any CNI plugin will do the job just fine.
+Howerever, it's a good idea to pick the CNI plugin carefully right at the beginning, because when the cluster grows to contain more then just a handful of services, the plugin you chose can have a great impact on scaling it further, and changing it without breaking the cluster is usually not a trivial task.
+
+There are plenty of CNI plugins to choose from, so choosing the right one requires quite a bit of research.
+To mention just a few: Cilium, Flannel and Weave Net are among the most popular choices.
+Flannel is the developed by CoreOS, and arguably the most popular one.
+It's easy to install, and works by creating a layer 3 overlay network, in which each pod has a subnet for allocating IPs for its containers internally.
+Weave uses a *mesh overlay network*, which means that each node in the overlay network is linked to multiple other ones.
+Each host has a routing component installed, and these communicate with eachother, exchangeing information about the topology, so they all stay up to date.
+Cilium uses eBPF to provide these functionalities and some security related ones.
+This means that in a lot of cases, it's the fastest solution, because it can inspect and modify the packages inside the kernel, which in turn have huge implications in scaling the cluster.
+
+The problem with current solutions is the lack of functionality regarding network resource management.
+Network is a finite resource, so it would be great, if we could control the quality of the service provided to customers based on the amount they pay for it.
+Currently, this is only possible by setting up rules manually, which is practically impossible when you have more than a couple of customers.
+Furthermore, while providing this functionality inside the CNI plugin itself is possible, this would stop users of other CNI plugins, which doesn't have this function, to use it.
+My solution provides this functionality regardless of the CNI plugin used, while still being easy to configure and use, using the *cgroup* and *eBPF* subsystems already provided by the kernel.
 
 ## Thesis Structure
 
-The thesis consists of multiple chapters.
-Chapter 2 contains some remarks about the development environment and the technologies I used in the project.
-Chapter 3 elaborates on the approach I used when implementing the software.
-TODO
-Chapter 4 contains the user documentation.
+The thesis consists of the following chapters:  
+Chapter 2 contains the user documentation.
 It describes the required dependencies for the project, gives some instructions for setting up and configuring necessary components of the system and explains how to use the software.
+Chapter 3 elaborates on the approach I used when implementing the software.  
+Chapter 4 contains some remarks about the development environment and the technologies I used in the project.  
 Chapter 5 is the developer documentation.
-This chapter iw written for developers, and its main goal is to help them understand the inner workings of the software, making troubleshooting or even extending the project with new functionalities easier.
-Chapter 6 describes the various tecniques used for testing the software at each stage of the development process.
+This chapter iw written for developers, and its main goal is to help them understand the inner workings of the software, making troubleshooting or even extending the project with new functionalities easier.  
+Chapter 6 describes the various tecniques used for testing the software at each stage of the development process.  
 Chapter 7 gives the reader a summary about the outcome of the project.
