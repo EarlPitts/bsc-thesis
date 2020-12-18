@@ -54,7 +54,17 @@ CONFIG_BPF_KPROBE_OVERRIDE=y
 CONFIG_TEST_BPF=m
 ```
 
+NOTES: részletesebben, hogy kiderüljön ez micsoda (erőforrások szabályozása, alkalmazások hierarchibába rendezése, vannak róla előadások és leírások a neten, különbségek leírhatók a V1-hez képest).
+
 ### Cgroup V2
+
+Cgroups (or *control groups*) is feature, provided by the kernel, for limiting the amount of resources a process can use.
+The resources that can be controlled by cgroups include CPU, RAM, block I/O, network I/O, etc...
+You can use cgroups by manually modifying files inside the `/sys/fs/cgroup` pseudo-filesystem.
+This folder contains the cgroup hierarchy which is just a series of folders nested inside eachother, with the root cgroup being at the top.
+The init process, which has the PID 1, sits at the top of the hierarchy.
+Processes can be added to cgroups by appending their PIDs to the `tasks` file inside the chosen cgroup.
+Because a deeper understanding of the inner workings of cgroups is not required for using the software, I won't go into greater details, but curious readers can easily find more information about cgroups on the internet.
 
 Although cgroup version 2 was in the kernel as early as 2014 [^fn1], most distributions still hasn't adapted it, and use the first version by default.
 You have to explicitly tell the kernel that you want the newer version.
