@@ -53,18 +53,23 @@ CONFIG_BPF_EVENTS=y
 CONFIG_BPF_KPROBE_OVERRIDE=y
 CONFIG_TEST_BPF=m
 ```
-
-NOTES: részletesebben, hogy kiderüljön ez micsoda (erőforrások szabályozása, alkalmazások hierarchibába rendezése, vannak róla előadások és leírások a neten, különbségek leírhatók a V1-hez képest).
-
-### Cgroup V2
+### Cgroup v2
 
 Cgroups (or *control groups*) is feature, provided by the kernel, for limiting the amount of resources a process can use.
 The resources that can be controlled by cgroups include CPU, RAM, block I/O, network I/O, etc...
 You can use cgroups by manually modifying files inside the `/sys/fs/cgroup` pseudo-filesystem.
 This folder contains the cgroup hierarchy which is just a series of folders nested inside eachother, with the root cgroup being at the top.
+Cgroups in the lower end of the hierarchy share the resources of their parents, and can be further limited.
 The init process, which has the PID 1, sits at the top of the hierarchy.
 Processes can be added to cgroups by appending their PIDs to the `tasks` file inside the chosen cgroup.
+Processes also inherit the cgroup membership from their parent process.
 Because a deeper understanding of the inner workings of cgroups is not required for using the software, I won't go into greater details, but curious readers can easily find more information about cgroups on the internet.
+
+My solution requires the second version of cgroups to work.
+Compared to the first version, the main differences are the unified hierarchy and the thread granularity.
+The unified hierarchy means that while in the first version, there were separate hierarchies for each resource types, v2 combines them into a single hierarchy.
+In v1, there was thread granularity, meaning that individual threads were assigned to cgroups.
+v2 changed this by only assigning processes to the cgroups.
 
 Although cgroup version 2 was in the kernel as early as 2014 [^fn1], most distributions still hasn't adapted it, and use the first version by default.
 You have to explicitly tell the kernel that you want the newer version.
