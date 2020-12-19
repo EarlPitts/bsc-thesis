@@ -101,8 +101,32 @@ My current solution relies on `bpftool`, which is a tool used for managing BPF p
 Without it, the `bpf()` system call would have to be called manually.
 The sources of bpftool can be found in the kernel repository.[^fn8]
 It can be installed with `make install`.
+Bpftool is a complete tool in itself, so it's usage is not limited to this project.
+It can be used to list eBPF programs inside the kernel with `bpftool prog list`.
+It can load the compiled eBPF object file with `bpftool prog load <prog.o> <target>`.
+It's even possible to dump the bytecode for an existing program using `bpftool prog dump xlated id <prog_id>`.
+Here is an example how a loaded program might look like after the kernel rewrites it:
+
+```
+   0: (bf) r6 = r1
+   1: (69) r7 = *(u16 *)(r6 +176)
+   2: (b4) w8 = 0
+   3: (44) w8 |= 2
+   4: (b7) r0 = 1
+   5: (55) if r8 != 0x2 goto pc+1
+   6: (b7) r0 = 0
+   7: (95) exit
+```
+
+There are many other things that one can do with bpftool (like managing BPF maps), but it's mostly out of scope for this project.
 
 ### Docker
+
+Docker is arguably the de facto standard when it comes to container runtimes in the enterprise environment.
+Although in newer versions of Kubernetes, Docker support is dropped[^fn16] in favor of lighter solutions.
+Docker is a tool for managing containers, images, builds and more.
+It's using the libcontainer runtime, which was later "repackaged" as runC.
+The Docker daemon can be controlled by using its REST API.
 
 After cgroup v2 is mounted, the Docker daemon will most likely fail to start.
 This is due to the fact that most container runtimes, including docker, still don't support the new cgroup hierarchy.[^fn4]
