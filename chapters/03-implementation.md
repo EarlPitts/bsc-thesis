@@ -1,8 +1,33 @@
 # Implementation
 
-The main idea that served as the primary goal for the projects was the attachment of the BPF program to a cgroup.
-In the final version, this is the pod's cgroup that want to impose the bandwidth limit on.
-However, in earlier versions I simply attached the BPF program to the root cgroup, so I could easily test and see the effect without the need to figure out the exact cgroup to use and measure the bandwidth from the cgroup's context.
+1. User creates pod with yaml, labeled
+2. Pod created
+3. Cgroup created, Event fired
+4. BPF program created on master
+5. Sent to correct worker
+6. Attached to pod's cgroup
+
+For the solution to be usable in a real-life scenario, it had to be scalable, meaning that managing the bandwidth of 10 pods should take roughly the same amount of effort as managing thousands.
+So when implementing the program, a great emphasis was placed on ease-of-usage and automation.
+The user only needs to specify the bandwidth once, in it's yaml file that will be used to create it.
+Afterwards, the program will make sure that each new pod created with that pod description will have it's bandwidth limited to the specified value.
+
+The bandwidth can be specified with a special label in the pod's yaml file.
+When the file is used to create a new pod, it is sent to the master node, which notifies an availabe worker node.
+The worker node creates the pod, at which point a new cgroup, belonging to the newly created pod, appears.
+At the same time the cgroup is created, a *pod creation* event is fired.
+This event will cause the ratelimiter, running on the master node, to generate the eBPF program with the bandwidth limitation specified in the yaml file.
+This eBPF program is sent to the worker node which started the pod.
+A high-level overview can be seen on the following image.
+
+![Creating a new pod inside the cluster.](../images/kubernetes.png)
+
+The main idea that served as the primary goal for the projects was the attachment of the BPF program to the pod's cgroup.
+
+
+![](../images/node.png)
+
+NOTES: én ezt a First version részt teljesen kihagynám, pontosabban nem írnám le hogy ez valami korai verzió volt. Itt inkább általánosan írnám le az alapelvet, ahogyan a BPF program elkészül, kiderül hová kell kerülnie, lefordul, betöltődik majd rákerül. Itt le lehetne írni magát a token bucketes algoritmust is akár kóddal. Meg hogy történik a BW limitáció, mondjuk egy TCP vagy UDP esetben mi lesz a különbség (semmi kb. csak UDP.nél a csomagok egy része el lesz dubva és kész, TCP-nél meg kisebb mértékben lesznek eldobva a csomagok, mert minden dobás után a TCP visszább szabályoz és egy idő után beáll arra a sebességre, ami meg lett adva a BPF token bucket kódban. Token bucket algoritmushoz az IETF RFC-t lehet mondjuk hivatkozni). 
 
 ## First Version
 

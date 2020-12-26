@@ -1,6 +1,5 @@
 # Developer Documentation
 
-The newest version can be found at https://github.com/EarlPitts/bpf-ratelimit.
 The projects contains the following modules and files:
 
 ## `ratelimit_master.py`
@@ -57,5 +56,7 @@ It contains the source code of the BPF program that will be generated, with the 
 
 The `bpf_helpers.h` header file contains some helper functions that are needed for compiling the BPF program.
 The `bpf_generator.py` module links to it while generating the program.
+
+The project's repository can be found at https://github.com/EarlPitts/bpf-ratelimit.
 
 ## Architectural Overview
