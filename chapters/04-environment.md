@@ -1,11 +1,18 @@
 # Development Environment
 
+For the initial experimenting phase and later testing if the function implemented was working properly, *Qemu* and *Vagrant* were used.
+These tools helped by emulating the target machine, without the need to use real hardware.
+
 ## Qemu
 
+As mentioned before, Qemu (Quick emulator) is a virtual machine emulator, similar to Virtualbox or VMWare.
+It supports booting with a custom kernel directly from the host.
+This eliminates the problem of copying the kernel inside the VM after every modification, or compiling the kernel inside the slower VM.
 When I started the project, I used Qemu for testing newer kernel functions.
 As most of the features that the project requires are still not widely adopted, I had to compile the kernel with the required features explicitly turned on.
 Qemu made it convinient to test kernel features without affecting my own host operating system.
-TODO ubuntu cloud image?
+
+![Emulating the target device using Qemu](../images/qemu.png)
 
 ## Vagrant
 
