@@ -2,6 +2,8 @@
 
 The projects contains the following modules and files:
 
+![Folder Structure](../images/folder_structure.png)
+
 ## `ratelimit_master.py`
 
 This module contains the logic that runs on the cluster's master node.
@@ -57,6 +59,10 @@ It contains the source code of the BPF program that will be generated, with the 
 The `bpf_helpers.h` header file contains some helper functions that are needed for compiling the BPF program.
 The `bpf_generator.py` module links to it while generating the program.
 
-The project's repository can be found at https://github.com/EarlPitts/bpf-ratelimit.
+## Use-Cases
 
-## Architectural Overview
+The following diagram depicts the use-cases of the program and the flow of control for each case.
+
+![Use-Cases and flow of control](../images/use_case.png)
+
+The project's repository can be found at https://github.com/EarlPitts/bpf-ratelimit.
